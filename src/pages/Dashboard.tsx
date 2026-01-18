@@ -1,87 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Unlock, CheckCircle, Star, Users, ShieldCheck, Sparkles } from 'lucide-react';
+import { CheckCircle, Sparkles } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProgressBar from '@/components/ProgressBar';
 import { getUser, isAuthenticated, isOnboardingComplete } from '@/lib/storage';
-import { useEffect } from 'react';
-
-interface ModulePurchaseModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  moduleNumber: 2 | 3;
-  title: string;
-  description: string;
-  price: string;
-}
-
-const HOTMART_LINKS = {
-  2: 'https://pay.hotmart.com/D100233207O?off=hgjszxx1',
-  3: 'https://pay.hotmart.com/N100448107A?off=fh6ck4c7',
-};
-
-const ModulePurchaseModal = ({ isOpen, onClose, moduleNumber, title, description, price }: ModulePurchaseModalProps) => {
-  if (!isOpen) return null;
-
-  const handlePurchase = () => {
-    window.open(HOTMART_LINKS[moduleNumber], '_blank');
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-card rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <Unlock className="w-8 h-8 text-primary" />
-          </div>
-          
-          <h2 className="font-display text-2xl font-bold mb-2">
-            🔓 {title}
-          </h2>
-          
-          <p className="text-muted-foreground mb-6">
-            {description}
-          </p>
-
-          <div className="bg-muted/50 rounded-xl p-4 mb-6">
-            <p className="text-3xl font-bold text-primary">{price}</p>
-            <p className="text-sm text-muted-foreground">Lifetime access</p>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={handlePurchase}
-              className="btn-primary w-full py-4 text-lg"
-            >
-              Unlock Now
-            </button>
-            
-            <button
-              onClick={onClose}
-              className="btn-secondary w-full"
-            >
-              Later
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
 
 interface ModuleCardProps {
   moduleNumber: number;
@@ -89,8 +13,6 @@ interface ModuleCardProps {
   description: string;
   isUnlocked: boolean;
   progress?: number;
-  price?: string;
-  socialProof?: { buyers: number; successRate: number };
   onClick: () => void;
   icon: React.ReactNode;
 }
@@ -101,8 +23,6 @@ const ModuleCard = ({
   description, 
   isUnlocked, 
   progress, 
-  price, 
-  socialProof,
   onClick,
   icon
 }: ModuleCardProps) => {
@@ -153,36 +73,10 @@ const ModuleCard = ({
         {description}
       </p>
 
-      {/* Progress (only for unlocked modules with progress) */}
+      {/* Progress */}
       {isUnlocked && progress !== undefined && progress > 0 && (
         <div className="mt-4">
           <ProgressBar progress={progress} size="sm" showPercentage />
-        </div>
-      )}
-
-      {/* Price (only for locked modules) */}
-      {!isUnlocked && price && (
-        <div className="mt-4 flex items-center justify-between">
-          <div>
-            <p className="text-2xl font-bold text-primary">{price}</p>
-            <p className="text-xs text-muted-foreground">Lifetime access</p>
-          </div>
-        </div>
-      )}
-
-      {/* Social Proof (only for locked modules) */}
-      {!isUnlocked && socialProof && (
-        <div className="mt-4 pt-4 border-t border-border">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              {socialProof.buyers} people bought today
-            </span>
-            <span className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-warning" />
-              {socialProof.successRate}% success
-            </span>
-          </div>
         </div>
       )}
 
@@ -197,10 +91,7 @@ const ModuleCard = ({
             }
           `}
         >
-          {isUnlocked 
-            ? (progress && progress > 0 ? 'Continue' : 'Start') 
-            : 'Unlock Now'
-          }
+          {progress && progress > 0 ? 'Continue' : 'Start'}
         </button>
       </div>
     </motion.div>
@@ -209,8 +100,7 @@ const ModuleCard = ({
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(getUser());
-  const [purchaseModal, setPurchaseModal] = useState<{ isOpen: boolean; module: 2 | 3 } | null>(null);
+  const [user] = useState(getUser());
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -226,50 +116,21 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  // Apenas o Módulo 1 ativo por enquanto
   const modules = [
     {
       number: 1,
-      title: 'PRP RECONNECTIONNECTION',
+      title: 'PRP RECONNECTION',
       description: 'Learn the fundamentals of winning them back in 7 practical and effective lessons.',
       isUnlocked: true,
       progress: user.modulo_1_progreso,
       icon: <Sparkles className="w-7 h-7" />,
-    },
-    {
-      number: 2,
-      title: 'Dominance Protocol',
-      description: 'Advanced techniques that work in 95% of cases. Master the art of attraction.',
-      isUnlocked: user.modulo_2_liberado,
-      price: '$17',
-      socialProof: { buyers: 15, successRate: 97 },
-      icon: <ShieldCheck className="w-7 h-7" />,
-    },
-    {
-      number: 3,
-      title: 'Emotional Shield',
-      description: 'How to maintain the obsession for 30 days. Includes access to exclusive community.',
-      isUnlocked: user.modulo_3_liberado,
-      price: '$37',
-      socialProof: { buyers: 12, successRate: 98 },
-      icon: <Lock className="w-7 h-7" />,
-    },
+    }
   ];
 
   const handleModuleClick = (moduleNumber: number) => {
     if (moduleNumber === 1) {
       navigate('/modulo1');
-    } else if (moduleNumber === 2) {
-      if (user.modulo_2_liberado) {
-        navigate('/modulo2');
-      } else {
-        setPurchaseModal({ isOpen: true, module: 2 });
-      }
-    } else if (moduleNumber === 3) {
-      if (user.modulo_3_liberado) {
-        navigate('/modulo3');
-      } else {
-        setPurchaseModal({ isOpen: true, module: 3 });
-      }
     }
   };
 
@@ -277,25 +138,20 @@ const Dashboard = () => {
     '7 lessons per module',
     'Scientific and proven content',
     'Lifetime access',
-    'Exclusive community (Module 3)',
+    'Support community',
   ];
 
   const testimonials = [
     { 
-      text: 'Module 1 gave me hope, but the Dominance Protocol changed everything. She now comes to me.', 
+      text: 'The first module gave me the clarity I needed to understand where I was failing. Highly recommended.', 
       author: 'John M.',
-      highlight: 'Dominance Protocol'
+      highlight: 'PRP Reconnection'
     },
     { 
-      text: 'I won her back with Module 1, but almost lost her again. The Emotional Shield saved my relationship.', 
+      text: 'Simple, direct and effective. I started seeing changes in the first few days.', 
       author: 'Charles R.',
-      highlight: 'Emotional Shield'
-    },
-    { 
-      text: 'I did all 3 modules. Without the Protocol and the Shield, it would have been just a temporary reconciliation.', 
-      author: 'Robert P.',
-      highlight: 'All 3 modules'
-    },
+      highlight: 'Quick Results'
+    }
   ];
 
   return (
@@ -330,8 +186,6 @@ const Dashboard = () => {
                   description={module.description}
                   isUnlocked={module.isUnlocked}
                   progress={module.progress}
-                  price={module.price}
-                  socialProof={module.socialProof}
                   onClick={() => handleModuleClick(module.number)}
                   icon={module.icon}
                 />
@@ -365,8 +219,8 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <h2 className="font-display text-xl font-semibold mb-6">Testimonials</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h2 className="font-display text-xl font-semibold mb-6">Success Stories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="card-premium">
                   <div className="flex items-start gap-3">
@@ -389,22 +243,6 @@ const Dashboard = () => {
       </main>
 
       <Footer />
-
-      {/* Purchase Modal */}
-      {purchaseModal && (
-        <ModulePurchaseModal
-          isOpen={purchaseModal.isOpen}
-          onClose={() => setPurchaseModal(null)}
-          moduleNumber={purchaseModal.module}
-          title={purchaseModal.module === 2 ? 'Dominance Protocol' : 'Emotional Shield'}
-          description={
-            purchaseModal.module === 2
-              ? 'Advanced techniques that work in 95% of cases'
-              : 'How to maintain the obsession for 30 days'
-          }
-          price={purchaseModal.module === 2 ? '$17' : '$37'}
-        />
-      )}
     </div>
   );
 };

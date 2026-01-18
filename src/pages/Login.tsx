@@ -58,7 +58,7 @@ const Login = () => {
               <Heart className="w-10 h-10 text-white" />
             </motion.div>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-3">
-              <span className="text-primary">PRP</span> RECONQUISTA
+              <span className="text-primary">PRP</span> RECONNECTION
             </h1>
             <p className="text-muted-foreground text-lg">
               The proven method to win back the one you love

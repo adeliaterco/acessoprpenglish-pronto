@@ -39,7 +39,7 @@ const Header = ({ showLogout = true }: HeaderProps) => {
             >
               <span className="text-2xl">💙</span>
               <span className="font-display font-bold text-lg">
-                <span className="text-primary">PRP</span> RECONQUISTA
+                <span className="text-primary">PRP</span> RECONNECTION
               </span>
             </div>
           </div>

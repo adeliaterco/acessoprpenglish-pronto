@@ -229,7 +229,7 @@ const Dashboard = () => {
   const modules = [
     {
       number: 1,
-      title: 'PRP RECONNECTION',
+      title: 'PRP RECONNECTIONNECTION',
       description: 'Learn the fundamentals of winning them back in 7 practical and effective lessons.',
       isUnlocked: true,
       progress: user.modulo_1_progreso,
